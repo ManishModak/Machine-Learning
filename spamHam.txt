@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split as tts
+from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
 
 # Load the SMS spam dataset
 df = pd.read_csv('/content/spam.csv', encoding='ISO-8859-1')
@@ -11,36 +12,28 @@ df = pd.read_csv('/content/spam.csv', encoding='ISO-8859-1')
 df['spam'] = df['v1'].apply(lambda x: 1 if x == 'spam' else 0)
 
 # Select relevant columns
-new_df = df[['v1', 'v2', 'spam']]
+new_df = df[['v1', 'v2', 'spam']
 
 # Split the data into training and testing sets
-x_train, x_test, y_train, y_test = tts(new_df['v2'], new_df['spam'])
+x_train, x_test, y_train, y_test = train_test_split(new_df['v2'], new_df['spam'], test_size=0.2, random_state=42)
 
 # Convert text messages to numerical features using CountVectorizer
-v = CountVectorizer()
-x_train_count = v.fit_transform(x_train.values)
+vectorizer = CountVectorizer()
+x_train_count = vectorizer.fit_transform(x_train)
+x_test_count = vectorizer.transform(x_test)
 
 # Train a Multinomial Naive Bayes classifier
-model = MultinomialNB()
-model.fit(x_train_count, y_train)
+naive_bayes_model = MultinomialNB()
+naive_bayes_model.fit(x_train_count, y_train)
 
-# Example emails for testing
-emails = ["How are you, brother?", "Free entry"]
-email_count = v.transform(emails)
-predictions = model.predict(email_count)
-print("Predictions for example emails:", predictions)
+# Train a Random Forest classifier
+random_forest_model = RandomForestClassifier(n_estimators=100, random_state=42)
+random_forest_model.fit(x_train_count, y_train)
 
-# Evaluate the model on the test data
-x_test_count = v.transform(x_test)
-accuracy = model.score(x_test_count, y_test)
-print("Accuracy on the test data:", accuracy)
+# Evaluate the Multinomial Naive Bayes model
+naive_bayes_accuracy = naive_bayes_model.score(x_test_count, y_test)
+print("Multinomial Naive Bayes Accuracy:", naive_bayes_accuracy)
 
-from sklearn.linear_model import LogisticRegression
-
-# Create and train the Logistic Regression model
-logistic_model = LogisticRegression()
-logistic_model.fit(x_train_count, y_train)
-
-# Evaluate the Logistic Regression model
-logistic_accuracy = logistic_model.score(x_test_count, y_test)
-print("Logistic Regression Accuracy:", logistic_accuracy)
+# Evaluate the Random Forest model
+random_forest_accuracy = random_forest_model.score(x_test_count, y_test)
+print("Random Forest Accuracy:", random_forest_accuracy)
